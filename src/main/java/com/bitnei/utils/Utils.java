@@ -25,7 +25,7 @@ public class Utils {
 	 * @author luhaiyou
 	 * @date 2015年7月9日
 	 */
-	public static Map<String,Object>  processMessageToMap(String message){
+	public static Map<String,String>  processMessageToMap(String message){
 		if(message.indexOf("{") != -1){
 			message = message.substring(message.indexOf("{"));
 		}
@@ -36,7 +36,7 @@ public class Utils {
 		if(message.endsWith("}")){
 			message = message.substring(0, message.length()-1);
 		}
-		Map<String,Object> map = new HashMap<>();
+		Map<String,String> map = new HashMap<>();
 		String[] keyValues = message.split(",");
 		for(String kv : keyValues){
 			String[] fields = kv.split(":");

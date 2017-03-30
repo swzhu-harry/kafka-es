@@ -83,7 +83,7 @@ public class GenerateIndex {
 						break;
 					}
 					String message = new String(mm.message(), "UTF-8");
-					Map<String, Object> keyValues = Utils.processMessageToMap(message);
+					Map<String, String> keyValues = Utils.processMessageToMap(message);
 					
 					ignoreFields(keyValues);
 					String indexId = getIndexId(keyValues);
@@ -95,7 +95,7 @@ public class GenerateIndex {
 			}
 		}
 
-		private void ignoreFields(Map<String, Object> keyValues) {
+		private void ignoreFields(Map<String, String> keyValues) {
 			if (StringUtils.isNotBlank(ignoreField)) {
 				String[] split = ignoreField.split(",");
 				for (int i = 0; i < split.length; i++) {
@@ -104,12 +104,12 @@ public class GenerateIndex {
 			}
 		}
 		
-		private String getIndexId(Map<String, Object> keyValues){
-			Object VId = keyValues.get("VID");
-			Object time = keyValues.get("2000");
+		private String getIndexId(Map<String, String> keyValues){
+			String VId = keyValues.get("VID");
+			String time = keyValues.get("2000");
 			long timestamp = 0;
 			try {
-				timestamp = Utils.convertToUTC(String.valueOf(time));
+				timestamp = Utils.convertToUTC(time);
 			} catch (ParseException e) {
 				e.printStackTrace();
 			}

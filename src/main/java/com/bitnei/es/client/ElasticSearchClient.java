@@ -105,7 +105,7 @@ public class ElasticSearchClient {
 	 * @param id
 	 * @param json
 	 */
-	public static void addIndexRequestToBulk(String id, Map<String, Object> json) {
+	public static void addIndexRequestToBulk(String id, Map<String, String> json) {
 		commitLock.lock();
 		try {
 //			UpdateRequest updateRequest = new UpdateRequest(ClientConfig.indexName, ClientConfig.typeName, id).doc(json)
