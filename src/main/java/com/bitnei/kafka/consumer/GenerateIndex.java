@@ -1,5 +1,6 @@
 package com.bitnei.kafka.consumer;
 
+import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -11,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.bitnei.es.client.ElasticSearchClient;
+import com.bitnei.es.client.ElasticSearchConfig.ClientConfig;
 import com.bitnei.utils.Utils;
 
 import kafka.consumer.ConsumerConfig;
@@ -28,16 +30,19 @@ public class GenerateIndex {
 
 	public static void main(String[] args) {
 
-		ignoreField = args[0];
+		String topicName = args[0];
+		ClientConfig.indexName = args[1];
+		ClientConfig.typeName = args[2];
+		ignoreField = args[3] == null ? "" : args[3];
+
 		logger.info("ignoreField：" + ignoreField);
 
 		try {
 			ElasticSearchClient.init();
 			ConsumerConfig consumerConfig = KafkaConsumerConfig.createConfig();
-			KafkaConsumer kafkaConsumerManager = new KafkaConsumer(consumerConfig, "testTopic", 6);
+			KafkaConsumer kafkaConsumerManager = new KafkaConsumer(consumerConfig, topicName, 6);
 
 			while (true) {
-				logger.info("重新初始化");
 				List<KafkaStream<byte[], byte[]>> kafkaStreams = kafkaConsumerManager.createKafkaStreams();
 				// 创建一个固定线程池
 				executor = Executors.newFixedThreadPool(kafkaStreams.size());
@@ -45,7 +50,6 @@ public class GenerateIndex {
 					KafkaReader reader = new KafkaReader(kafkaStream);
 					executor.submit(reader);
 				}
-				logger.info("等待中。。。");
 				try {
 					TimeUnit.MINUTES.sleep(600);
 				} catch (InterruptedException e) {
@@ -56,6 +60,8 @@ public class GenerateIndex {
 				kafkaConsumerManager.shutdown();
 			}
 		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+		} finally {
 			ElasticSearchClient.close();
 		}
 	}
@@ -70,7 +76,6 @@ public class GenerateIndex {
 
 		public void run() {
 			ConsumerIterator<byte[], byte[]> it = stream.iterator();
-			int a = 1;
 			while (it.hasNext()) {
 				try {
 					MessageAndMetadata<byte[], byte[]> mm = it.next();
@@ -78,25 +83,38 @@ public class GenerateIndex {
 						break;
 					}
 					String message = new String(mm.message(), "UTF-8");
-					Map<String, String> keyValues = Utils.processMessageToMap(message);
-					String VID = keyValues.get("VID");
-					String TIME = keyValues.get("2000");
-					long timestamp = Utils.convertToUTC(TIME);
-
-					String indexId = VID + "_" + timestamp;
-					logger.info(indexId);
-					if (StringUtils.isNotBlank(ignoreField)) {
-						String[] split = ignoreField.split(",");
-						for (int i = 0; i < split.length; i++) {
-							keyValues.remove(split[i]);
-						}
-					}
-					ElasticSearchClient.addUpdateBuilderToBulk(indexId, keyValues);
-					System.out.println("索引计数：" + a++);
+					Map<String, Object> keyValues = Utils.processMessageToMap(message);
+					
+					ignoreFields(keyValues);
+					String indexId = getIndexId(keyValues);
+					
+					ElasticSearchClient.addIndexRequestToBulk(indexId, keyValues);
 				} catch (Exception e) {
-					e.printStackTrace();
+					logger.error(e.getMessage(), e);
 				}
 			}
+		}
+
+		private void ignoreFields(Map<String, Object> keyValues) {
+			if (StringUtils.isNotBlank(ignoreField)) {
+				String[] split = ignoreField.split(",");
+				for (int i = 0; i < split.length; i++) {
+					keyValues.remove(split[i]);
+				}
+			}
+		}
+		
+		private String getIndexId(Map<String, Object> keyValues){
+			Object VId = keyValues.get("VID");
+			Object time = keyValues.get("2000");
+			long timestamp = 0;
+			try {
+				timestamp = Utils.convertToUTC(String.valueOf(time));
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			String indexId = VId + "_" + timestamp;
+			return indexId;
 		}
 	}
 }

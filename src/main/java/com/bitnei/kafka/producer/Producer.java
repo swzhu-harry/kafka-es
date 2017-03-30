@@ -14,7 +14,7 @@ public class Producer {
 
 	public static void main(String[] args) {
 		ProducerConfig producerConfig = KafkaProducerConfig.createProducerConfig();
-		KafkaProducer kafkaProducer = new KafkaProducer("testTopic", producerConfig);
+		KafkaProducer kafkaProducer = new KafkaProducer("testTopic1", producerConfig);
 		BufferedReader bufferedReader = null;
 		try {
 			bufferedReader = new BufferedReader(new FileReader("/home/es/m1.txt"));
@@ -22,7 +22,7 @@ public class Producer {
 			int i = 1;
 			while ((data = bufferedReader.readLine()) != null) {
 				kafkaProducer.send(data.getBytes());
-				logger.info("读取" + i++ + "行" + data.substring(0, 50));
+				logger.info("读取" + i++ + "行");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

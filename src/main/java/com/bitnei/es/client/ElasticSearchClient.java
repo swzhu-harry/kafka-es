@@ -15,7 +15,7 @@ import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -35,14 +35,21 @@ public class ElasticSearchClient {
 
 	private static Lock commitLock = new ReentrantLock();
 
-	private static TransportClient client = null;
-	private static BulkProcessor bulkProcessor = null;
-
-	public static void init() {
+	private static TransportClient client;
+	private static BulkProcessor bulkProcessor;
+	
+	public static void init(){
+		initClient();
+		initBulkProcessor();
+	}
+	
+	private static void initClient() {
 		logger.info("es初始化配置信息：" + ElasticSearchConfig.getInfo());
 
-		Settings settings = Settings.builder().put("cluster.name", ClientConfig.clusterName)// 设置集群名称
-				.put("client.transport.sniff", ClientConfig.isSniff).build();
+		Settings settings = Settings.builder()
+				.put("cluster.name", ClientConfig.clusterName)
+				.put("client.transport.sniff", ClientConfig.isSniff)
+				.build();
 
 		client = new PreBuiltTransportClient(settings);
 		String[] nodes = ClientConfig.nodeHosts.split(",");
@@ -51,14 +58,15 @@ public class ElasticSearchClient {
 				String[] hostPort = node.split(":");
 				try {
 					int port = StringUtils.isBlank(hostPort[1]) ? DEFAULT_NODE_PORT : Integer.valueOf(hostPort[1]);
-					client.addTransportAddress(
-							new InetSocketTransportAddress(InetAddress.getByName(hostPort[0]), port));
+					client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(hostPort[0]), port));
 				} catch (UnknownHostException e) {
 					e.printStackTrace();
 				}
 			}
 		}
+	}
 
+	private static void initBulkProcessor() {
 		bulkProcessor = BulkProcessor.builder(client, new BulkProcessor.Listener() {
 			@Override
 			public void beforeBulk(long executionId, BulkRequest request) {
@@ -68,8 +76,7 @@ public class ElasticSearchClient {
 			@Override
 			public void afterBulk(long executionId, BulkRequest request, BulkResponse response) {
 				// 提交结束后调用（无论成功或失败）
-				logger.info("提交" + response.getItems().length + "个文档，用时" + response.getTookInMillis() + "MS"
-						+ (response.hasFailures() ? " 有文档提交失败！" : ""));
+				logger.info("提交" + response.getItems().length + "个文档，用时" + response.getTookInMillis() + "MS" + (response.hasFailures() ? " 有文档提交失败！" : ""));
 				if (response.hasFailures()) {
 					logger.error(response.buildFailureMessage());
 				}
@@ -84,10 +91,12 @@ public class ElasticSearchClient {
 					bulkProcessor.add(actionRequest);
 				}
 			}
-		}).setBulkActions(BulkProcessorConfig.bulkActions)
-				.setBulkSize(new ByteSizeValue(BulkProcessorConfig.bulkSize, ByteSizeUnit.MB))
-				.setFlushInterval(TimeValue.timeValueSeconds(BulkProcessorConfig.flushInterval))
-				.setConcurrentRequests(BulkProcessorConfig.concurrentRequests).build();
+		})
+		.setBulkActions(BulkProcessorConfig.bulkActions)
+		.setBulkSize(new ByteSizeValue(BulkProcessorConfig.bulkSize, ByteSizeUnit.MB))
+		.setFlushInterval(TimeValue.timeValueSeconds(BulkProcessorConfig.flushInterval))
+		.setConcurrentRequests(BulkProcessorConfig.concurrentRequests)
+		.build();
 	}
 
 	/**
@@ -96,12 +105,13 @@ public class ElasticSearchClient {
 	 * @param id
 	 * @param json
 	 */
-	public static void addUpdateBuilderToBulk(String id, Map<String, String> json) {
+	public static void addIndexRequestToBulk(String id, Map<String, Object> json) {
 		commitLock.lock();
 		try {
-			UpdateRequest updateRequest = new UpdateRequest(ClientConfig.indexName, ClientConfig.typeName, id).doc(json)
-					.docAsUpsert(true);
-			bulkProcessor.add(updateRequest);
+//			UpdateRequest updateRequest = new UpdateRequest(ClientConfig.indexName, ClientConfig.typeName, id).doc(json)
+//					.docAsUpsert(true);
+			IndexRequest indexRequest = new IndexRequest(ClientConfig.indexName, ClientConfig.typeName,id).source(json);
+			bulkProcessor.add(indexRequest);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -114,7 +124,7 @@ public class ElasticSearchClient {
 	 *
 	 * @param id
 	 */
-	public static void addDeleteBuilderToBulk(String id) {
+	public static void addDeleteRequestToBulk(String id) {
 		commitLock.lock();
 		try {
 			DeleteRequest deleteRequest = new DeleteRequest(ClientConfig.indexName, ClientConfig.typeName, id);
@@ -131,7 +141,7 @@ public class ElasticSearchClient {
 	 */
 	public static void close() {
 		try {
-			bulkProcessor.awaitClose(8, TimeUnit.MINUTES);
+			bulkProcessor.awaitClose(5, TimeUnit.MINUTES);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 			logger.error(e.getMessage(), e);

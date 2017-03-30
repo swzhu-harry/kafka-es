@@ -10,7 +10,7 @@ import java.util.Properties;
 
 public class ElasticSearchConfig {
 
-	static class ClientConfig {
+	public static class ClientConfig {
 		// ElasticSearch的集群名称
 		static String clusterName;
 		// 自动嗅探整个集群的状态，把集群中其它机器的ip地址加到客户端中
@@ -18,9 +18,9 @@ public class ElasticSearchConfig {
 		// ElasticSearch的host
 		static String nodeHosts;
 		// ElasticSearch的索引名称
-		static String indexName;
+		public static String indexName;
 		// ElasticSearch的类型名称
-		static String typeName;
+		public static String typeName;
 	}
 
 	static class BulkProcessorConfig {
