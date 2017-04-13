@@ -49,6 +49,7 @@ public class ElasticSearchClient {
 		Settings settings = Settings.builder()
 				.put("cluster.name", ClientConfig.clusterName)
 				.put("client.transport.sniff", ClientConfig.isSniff)
+				.put("client.transport.ping_timeout",ClientConfig.pingTimeout)
 				.build();
 
 		client = new PreBuiltTransportClient(settings);
@@ -105,12 +106,12 @@ public class ElasticSearchClient {
 	 * @param id
 	 * @param json
 	 */
-	public static void addIndexRequestToBulk(String id, Map<String, String> json) {
+	public static void addIndexRequestToBulk(String indexName,String id, Map<String, String> json) {
 		commitLock.lock();
 		try {
 //			UpdateRequest updateRequest = new UpdateRequest(ClientConfig.indexName, ClientConfig.typeName, id).doc(json)
 //					.docAsUpsert(true);
-			IndexRequest indexRequest = new IndexRequest(ClientConfig.indexName, ClientConfig.typeName,id).source(json);
+			IndexRequest indexRequest = new IndexRequest(indexName, ClientConfig.typeName,id).source(json);
 			bulkProcessor.add(indexRequest);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -127,7 +128,7 @@ public class ElasticSearchClient {
 	public static void addDeleteRequestToBulk(String id) {
 		commitLock.lock();
 		try {
-			DeleteRequest deleteRequest = new DeleteRequest(ClientConfig.indexName, ClientConfig.typeName, id);
+			DeleteRequest deleteRequest = new DeleteRequest(ClientConfig.indexPrefix, ClientConfig.typeName, id);
 			bulkProcessor.add(deleteRequest);
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -1,6 +1,7 @@
 package com.bitnei.kafka.consumer;
 
 import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -11,6 +12,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.bitnei.es.builder.IndexNameBuilder;
 import com.bitnei.es.client.ElasticSearchClient;
 import com.bitnei.es.client.ElasticSearchConfig.ClientConfig;
 import com.bitnei.utils.Utils;
@@ -31,7 +33,7 @@ public class GenerateIndex {
 	public static void main(String[] args) {
 
 		String topicName = args[0];
-		ClientConfig.indexName = args[1];
+		ClientConfig.indexPrefix = args[1];
 		ClientConfig.typeName = args[2];
 		ignoreField = args[3] == null ? "" : args[3];
 
@@ -51,7 +53,7 @@ public class GenerateIndex {
 					executor.submit(reader);
 				}
 				try {
-					TimeUnit.MINUTES.sleep(600);
+					TimeUnit.MINUTES.sleep(60);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -84,11 +86,17 @@ public class GenerateIndex {
 					}
 					String message = new String(mm.message(), "UTF-8");
 					Map<String, String> keyValues = Utils.processMessageToMap(message);
-					
+
 					ignoreFields(keyValues);
-					String indexId = getIndexId(keyValues);
+					String vid = getVID(keyValues);
+					long timeStamp = getTimeStamp(keyValues);
+					String indexId = getIndexId(vid, timeStamp);
 					
-					ElasticSearchClient.addIndexRequestToBulk(indexId, keyValues);
+					String indexName = IndexNameBuilder.getIndexName(timeStamp);
+					
+					keyValues.put("createTime", String.valueOf(new Date().getTime()));
+
+					ElasticSearchClient.addIndexRequestToBulk(indexName, indexId, keyValues);
 				} catch (Exception e) {
 					logger.error(e.getMessage(), e);
 				}
@@ -103,9 +111,18 @@ public class GenerateIndex {
 				}
 			}
 		}
-		
-		private String getIndexId(Map<String, String> keyValues){
+
+		private String getIndexId(String VId, long timestamp) {
+			String indexId = VId + "_" + timestamp;
+			return indexId;
+		}
+
+		private String getVID(Map<String, String> keyValues) {
 			String VId = keyValues.get("VID");
+			return VId;
+		}
+
+		private long getTimeStamp(Map<String, String> keyValues) {
 			String time = keyValues.get("2000");
 			long timestamp = 0;
 			try {
@@ -113,8 +130,7 @@ public class GenerateIndex {
 			} catch (ParseException e) {
 				e.printStackTrace();
 			}
-			String indexId = VId + "_" + timestamp;
-			return indexId;
+			return timestamp;
 		}
 	}
 }

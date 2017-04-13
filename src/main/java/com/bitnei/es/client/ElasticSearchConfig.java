@@ -15,10 +15,14 @@ public class ElasticSearchConfig {
 		static String clusterName;
 		// 自动嗅探整个集群的状态，把集群中其它机器的ip地址加到客户端中
 		static boolean isSniff = true;
+		// ElasticSearch客户端链接超时时间
+		public static String pingTimeout;
 		// ElasticSearch的host
 		static String nodeHosts;
-		// ElasticSearch的索引名称
-		public static String indexName;
+		// ElasticSearch的索引名称前缀
+		public static String indexPrefix;
+		// ElasticSearch的索引名称后缀格式化方式
+		public static String indexPostfixFormat;
 		// ElasticSearch的类型名称
 		public static String typeName;
 	}
@@ -50,8 +54,14 @@ public class ElasticSearchConfig {
 		if (StringUtils.isNotBlank(properties.getProperty("es.client.transport.sniff"))) {
 			ClientConfig.isSniff = Boolean.valueOf(properties.getProperty("es.client.transport.sniff").trim());
 		}
-		if (StringUtils.isNotBlank(properties.getProperty("es.index.name"))) {
-			ClientConfig.indexName = properties.getProperty("es.index.name").trim();
+		if (StringUtils.isNotBlank(properties.getProperty("es.client.transport.ping_timeout"))) {
+			ClientConfig.pingTimeout = properties.getProperty("es.client.transport.ping_timeout").trim();
+		}
+		if (StringUtils.isNotBlank(properties.getProperty("es.index.name.prefix"))) {
+			ClientConfig.indexPrefix = properties.getProperty("es.index.name.prefix").trim();
+		}
+		if (StringUtils.isNotBlank(properties.getProperty("es.index.name.postfix.format"))) {
+			ClientConfig.indexPostfixFormat = properties.getProperty("es.index.name.postfix.format").trim();
 		}
 		if (StringUtils.isNotBlank(properties.getProperty("es.type.name"))) {
 			ClientConfig.typeName = properties.getProperty("es.type.name").trim();
