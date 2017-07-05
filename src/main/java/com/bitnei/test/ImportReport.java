@@ -12,6 +12,7 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.SearchHit;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by IntelliJ IDEA.
@@ -62,6 +63,11 @@ public class ImportReport {
             response = searchScrollRequestBuilder.get();
             // 每次返回下一个批次结果 直到没有结果返回时停止 即hits数组空时
             if (response.getHits().getHits().length == 0) {
+                try {
+                    TimeUnit.MINUTES.sleep(3);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 break;
             } // if
             // 这一批次结果
@@ -79,48 +85,48 @@ public class ImportReport {
 
     private static void insert(SearchHit hit) {
         for (int j = 1; j <= 30; j++) {
-            Map<String, String> report = new HashMap<>();
+            Map<String, Object> report = new HashMap<>();
             report.put("vin", hit.getSource().get("vin").toString());
             report.put("id", UUID.randomUUID().toString());
 
             Calendar calendar = Calendar.getInstance();
             calendar.set(Calendar.MONTH, 5);
             calendar.set(Calendar.DAY_OF_MONTH, j);
-            report.put("reportTime", String.valueOf(calendar.getTime().getTime()));
+            report.put("reportTime", calendar.getTime().getTime());
 
-            report.put("onlineTimeSum", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runTimeSum", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runTimes", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runKm", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runTimeAvg", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runKmAvg", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runSpeedAvg", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runTimeMax", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runTimeMin", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runKmMax", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runSpeedMax", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runVolMax", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runVolMin", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runCurMax", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runCurMin", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runSocMax", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runSocMin", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runSvolMax", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runSvolMin", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runCptempMax", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runCptempMin", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runEngtempMax", String.valueOf(new Random().nextDouble() * 2.5 + 3));
-            report.put("runEngtempMin", String.valueOf(new Random().nextDouble() * 2.5 + 3));
+            report.put("onlineTimeSum", new Random().nextDouble() * 2.5 + 3);
+            report.put("runTimeSum", new Random().nextDouble() * 2.5 + 3);
+            report.put("runTimes", new Random().nextDouble() * 2.5 + 3);
+            report.put("runKm", new Random().nextDouble() * 2.5 + 3);
+            report.put("runTimeAvg", new Random().nextDouble() * 2.5 + 3);
+            report.put("runKmAvg", new Random().nextDouble() * 2.5 + 3);
+            report.put("runSpeedAvg", new Random().nextDouble() * 2.5 + 3);
+            report.put("runTimeMax", new Random().nextDouble() * 2.5 + 3);
+            report.put("runTimeMin", new Random().nextDouble() * 2.5 + 3);
+            report.put("runKmMax", new Random().nextDouble() * 2.5 + 3);
+            report.put("runSpeedMax", new Random().nextDouble() * 2.5 + 3);
+            report.put("runVolMax", new Random().nextDouble() * 2.5 + 3);
+            report.put("runVolMin", new Random().nextDouble() * 2.5 + 3);
+            report.put("runCurMax", new Random().nextDouble() * 2.5 + 3);
+            report.put("runCurMin", new Random().nextDouble() * 2.5 + 3);
+            report.put("runSocMax", new Random().nextDouble() * 2.5 + 3);
+            report.put("runSocMin", new Random().nextDouble() * 2.5 + 3);
+            report.put("runSvolMax", new Random().nextDouble() * 2.5 + 3);
+            report.put("runSvolMin", new Random().nextDouble() * 2.5 + 3);
+            report.put("runCptempMax", new Random().nextDouble() * 2.5 + 3);
+            report.put("runCptempMin", new Random().nextDouble() * 2.5 + 3);
+            report.put("runEngtempMax", new Random().nextDouble() * 2.5 + 3);
+            report.put("runEngtempMin", new Random().nextDouble() * 2.5 + 3);
 
-            report.put("veh_type_id", hit.getSource().get("veh_type_id").toString());
-            report.put("manu_unit_id", hit.getSource().get("manu_unit_id").toString());
-            report.put("veh_model_id", hit.getSource().get("veh_model_id").toString());
-            report.put("term_unit_id", hit.getSource().get("term_unit_id").toString());
-            report.put("term_model_id", hit.getSource().get("term_model_id").toString());
-            report.put("sys_division_id", hit.getSource().get("sys_division_id").toString());
-            report.put("sys_store_point_id", hit.getSource().get("sys_store_point_id").toString());
+            report.put("veh_type_id", hit.getSource().get("veh_type_id"));
+            report.put("manu_unit_id", hit.getSource().get("manu_unit_id"));
+            report.put("veh_model_id", hit.getSource().get("veh_model_id"));
+            report.put("term_unit_id", hit.getSource().get("term_unit_id"));
+            report.put("term_model_id", hit.getSource().get("term_model_id"));
+            report.put("sys_division_id", hit.getSource().get("sys_division_id"));
+            report.put("sys_store_point_id", hit.getSource().get("sys_store_point_id"));
 
-            ElasticSearchClient.addIndexRequestToBulk("report", report.get("id"), report);
+            ElasticSearchClient.addIndexRequestToBulk("report", report.get("id").toString(), report);
             System.out.println(report.get("id"));
         }
     }

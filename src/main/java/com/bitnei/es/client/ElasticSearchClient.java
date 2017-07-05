@@ -114,7 +114,7 @@ public class ElasticSearchClient {
      * @param id
      * @param json
      */
-    public static void addIndexRequestToBulk(String indexName, String id, Map<String, String> json) {
+    public static void addIndexRequestToBulk(String indexName, String id, Map<String, Object> json) {
         commitLock.lock();
         try {
             IndexRequest indexRequest = new IndexRequest(indexName, ClientConfig.typeName, id).source(json);

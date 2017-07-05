@@ -1,5 +1,17 @@
 package com.bitnei.kafka.consumer;
 
+import com.bitnei.es.builder.IndexNameBuilder;
+import com.bitnei.es.client.ElasticSearchClient;
+import com.bitnei.es.client.ElasticSearchConfig.ClientConfig;
+import com.bitnei.utils.Utils;
+import kafka.consumer.ConsumerConfig;
+import kafka.consumer.ConsumerIterator;
+import kafka.consumer.KafkaStream;
+import kafka.message.MessageAndMetadata;
+import org.apache.commons.lang.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
@@ -7,20 +19,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.bitnei.es.builder.IndexNameBuilder;
-import com.bitnei.es.client.ElasticSearchClient;
-import com.bitnei.es.client.ElasticSearchConfig.ClientConfig;
-import com.bitnei.utils.Utils;
-
-import kafka.consumer.ConsumerConfig;
-import kafka.consumer.ConsumerIterator;
-import kafka.consumer.KafkaStream;
-import kafka.message.MessageAndMetadata;
 
 public class GenerateIndex {
 
@@ -85,7 +83,7 @@ public class GenerateIndex {
 						break;
 					}
 					String message = new String(mm.message(), "UTF-8");
-					Map<String, String> keyValues = Utils.processMessageToMap(message);
+					Map<String, Object> keyValues = Utils.processMessageToMap(message);
 
 					ignoreFields(keyValues);
 					String vid = getVID(keyValues);
@@ -103,7 +101,7 @@ public class GenerateIndex {
 			}
 		}
 
-		private void ignoreFields(Map<String, String> keyValues) {
+		private void ignoreFields(Map<String, Object> keyValues) {
 			if (StringUtils.isNotBlank(ignoreField)) {
 				String[] split = ignoreField.split(",");
 				for (int i = 0; i < split.length; i++) {
@@ -117,13 +115,13 @@ public class GenerateIndex {
 			return indexId;
 		}
 
-		private String getVID(Map<String, String> keyValues) {
-			String VId = keyValues.get("VID");
+		private String getVID(Map<String, Object> keyValues) {
+			String VId = keyValues.get("VID").toString();
 			return VId;
 		}
 
-		private long getTimeStamp(Map<String, String> keyValues) {
-			String time = keyValues.get("2000");
+		private long getTimeStamp(Map<String, Object> keyValues) {
+			String time = keyValues.get("2000").toString();
 			long timestamp = 0;
 			try {
 				timestamp = Utils.convertToUTC(time);

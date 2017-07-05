@@ -1,11 +1,11 @@
 package com.bitnei.utils;
 
+import org.apache.commons.lang.StringUtils;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
 
 /**
  * ClassName: Utils
@@ -25,8 +25,8 @@ public class Utils {
 	 * @author luhaiyou
 	 * @date 2015年7月9日
 	 */
-	public static Map<String,String>  processMessageToMap(String message){
-		if(message.indexOf("{") != -1){
+	public static Map<String,Object>  processMessageToMap(String message){
+		if(message.contains("{")){
 			message = message.substring(message.indexOf("{"));
 		}
 		// 把{}去掉
@@ -36,7 +36,7 @@ public class Utils {
 		if(message.endsWith("}")){
 			message = message.substring(0, message.length()-1);
 		}
-		Map<String,String> map = new HashMap<>();
+		Map<String,Object> map = new HashMap<>();
 		String[] keyValues = message.split(",");
 		for(String kv : keyValues){
 			String[] fields = kv.split(":");
