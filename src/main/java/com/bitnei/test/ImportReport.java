@@ -84,7 +84,7 @@ public class ImportReport {
 
 
     private static void insert(SearchHit hit) {
-        for (int j = 1; j <= 30; j++) {
+        for (int j = 10; j <= 30; j++) {
             Map<String, Object> report = new HashMap<>();
             report.put("vin", hit.getSource().get("vin").toString());
             report.put("id", UUID.randomUUID().toString());
@@ -172,8 +172,9 @@ public class ImportReport {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         String scrollId = searchByScroll();
         searchByScrollId(scrollId);
+        TimeUnit.MINUTES.sleep(2);
     }
 }

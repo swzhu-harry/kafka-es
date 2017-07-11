@@ -5,7 +5,6 @@ import com.bitnei.es.client.ElasticSearchConfig.ClientConfig;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -87,9 +86,6 @@ public class ElasticSearchClient {
                 // 提交结束且失败时调用
                 logger.error("executionId:" + executionId);
                 logger.error("有文档提交失败！after failure=" + failure);
-                for (ActionRequest actionRequest : request.requests()) {
-                    bulkProcessor.add(actionRequest);
-                }
             }
         })
                 .setBulkActions(BulkProcessorConfig.bulkActions)
