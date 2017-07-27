@@ -4,7 +4,6 @@ import com.bitnei.es.client.ElasticSearchClient;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsearch.client.transport.TransportClient;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -19,13 +18,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class ImportLocation {
     private static final Logger logger = LogManager.getLogger(ElasticSearchClient.class);
-
-    private static TransportClient client;
-
-    static {
-        ElasticSearchClient.init();
-        client = ElasticSearchClient.getClient();
-    }
 
     private static void readData() {
         InputStreamReader read = null;

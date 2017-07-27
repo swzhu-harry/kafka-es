@@ -25,7 +25,6 @@ public class ImportReport {
     private static TransportClient client;
 
     static {
-        ElasticSearchClient.init();
         client = ElasticSearchClient.getClient();
     }
 
@@ -46,7 +45,7 @@ public class ImportReport {
             String source = searchHit.getSource().toString();
             logger.info("--------- searchByScroll source {}", source);
             insert(searchHit);
-        } // for
+        }
         return scrollId;
     }
 
@@ -69,17 +68,17 @@ public class ImportReport {
                     e.printStackTrace();
                 }
                 break;
-            } // if
+            }
             // 这一批次结果
             SearchHit[] searchHits = response.getHits().getHits();
             for (SearchHit searchHit : searchHits) {
                 String source = searchHit.getSource().toString();
                 logger.info("--------- searchByScroll source {}", source);
                 insert(searchHit);
-            } // for
+            }
             // 只有最近的滚动ID才能被使用
             scrollId = response.getScrollId();
-        } // while
+        }
     }
 
 

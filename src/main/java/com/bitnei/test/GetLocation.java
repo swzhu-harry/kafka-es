@@ -25,7 +25,6 @@ public class GetLocation {
     private static TransportClient client;
 
     static {
-        ElasticSearchClient.init();
         client = ElasticSearchClient.getClient();
     }
 

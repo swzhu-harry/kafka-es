@@ -10,6 +10,7 @@ import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -36,7 +37,7 @@ public class ElasticSearchClient {
     private static TransportClient client;
     private static BulkProcessor bulkProcessor;
 
-    public static void init() {
+    static {
         initClient();
         initBulkProcessor();
     }
@@ -98,9 +99,10 @@ public class ElasticSearchClient {
 
     /**
      * 获取es客户端
+     *
      * @return 客户端
      */
-    public static TransportClient getClient(){
+    public static TransportClient getClient() {
         return client;
     }
 
@@ -128,7 +130,7 @@ public class ElasticSearchClient {
      * @param id
      * @param json
      */
-    public static void addParentIndexRequestToBulk(String indexName,String typeName,String id, String parent, String json) {
+    public static void addParentIndexRequestToBulk(String indexName, String typeName, String id, String parent, String json) {
         commitLock.lock();
         try {
             IndexRequest indexRequest = new IndexRequest(indexName, typeName, id).parent(parent).source(json);
@@ -154,6 +156,23 @@ public class ElasticSearchClient {
             e.printStackTrace();
         } finally {
             commitLock.unlock();
+        }
+    }
+
+    /**
+     * 加入更新请求到缓冲池
+     *
+     * @param indexName 索引名
+     * @param id        id
+     * @param json      更新请求体
+     */
+    public static void addUpdateRequestToBulk(String indexName, String typeName, String id, Map<String, Object> json) {
+
+        try {
+            UpdateRequest updateRequest = new UpdateRequest(indexName, typeName, id).doc(json);
+            bulkProcessor.add(updateRequest);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

@@ -38,7 +38,6 @@ public class GenerateIndex {
 		logger.info("ignoreField：" + ignoreField);
 
 		try {
-			ElasticSearchClient.init();
 			ConsumerConfig consumerConfig = KafkaConsumerConfig.createConfig();
 			KafkaConsumer kafkaConsumerManager = new KafkaConsumer(consumerConfig, topicName, 6);
 
