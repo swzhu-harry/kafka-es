@@ -1,4 +1,4 @@
-package com.bitnei.test;
+package com.zhaogd.test;
 
 import com.bitnei.es.client.ElasticSearchClient;
 import org.apache.commons.lang.StringUtils;

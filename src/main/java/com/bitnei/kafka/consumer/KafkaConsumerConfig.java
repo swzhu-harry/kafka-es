@@ -1,9 +1,9 @@
 package com.bitnei.kafka.consumer;
 
+import kafka.consumer.ConsumerConfig;
+
 import java.io.IOException;
 import java.util.Properties;
-
-import kafka.consumer.ConsumerConfig;
 
 public class KafkaConsumerConfig {
 
@@ -14,8 +14,7 @@ public class KafkaConsumerConfig {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		ConsumerConfig consumerConfig = new ConsumerConfig(props);  
-		return consumerConfig;
+		return new ConsumerConfig(props);
 	}
 	
 }

@@ -1,4 +1,4 @@
-package com.bitnei.test;
+package com.zhaogd.test;
 
 import com.alibaba.fastjson.JSON;
 import com.bitnei.es.client.ElasticSearchClient;
