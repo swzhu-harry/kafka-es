@@ -7,5 +7,5 @@ import kafka.consumer.KafkaStream; /**
  */
 public interface KafkaStreamResolver extends Runnable{
 
-    KafkaStreamResolver getInstance(KafkaStream<byte[], byte[]> kafkaStream);
+    KafkaStreamResolver init(KafkaStream<byte[], byte[]> kafkaStream);
 }

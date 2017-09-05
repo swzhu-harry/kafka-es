@@ -17,6 +17,11 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.unit.ByteSizeUnit;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.UpdateByQueryAction;
+import org.elasticsearch.script.Script;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 import java.net.InetAddress;
@@ -106,11 +111,30 @@ public class ElasticSearchClient {
         return client;
     }
 
+
+    /**
+     * 通过查询更新
+     *
+     * @param indexName    索引名称
+     * @param queryBuilder 查询条件
+     * @param script       更新脚本
+     * @return 更新结果信息
+     */
+    public static BulkByScrollResponse updateByQuery(String indexName, QueryBuilder queryBuilder, Script script) {
+        return UpdateByQueryAction
+                .INSTANCE.newRequestBuilder(client)
+                .filter(queryBuilder)
+                .source(indexName)
+                .script(script)
+                .get();
+    }
+
     /**
      * 加入索引请求到缓冲池
      *
-     * @param id
-     * @param json
+     * @param indexName  索引名称
+     * @param id         ID
+     * @param json       实体
      */
     public static void addIndexRequestToBulk(String indexName, String id, Map<String, Object> json) {
         commitLock.lock();
@@ -125,32 +149,15 @@ public class ElasticSearchClient {
     }
 
     /**
-     * 加入带父级的索引请求到缓冲池
-     *
-     * @param id
-     * @param json
-     */
-    public static void addParentIndexRequestToBulk(String indexName, String typeName, String id, String parent, String json) {
-        commitLock.lock();
-        try {
-            IndexRequest indexRequest = new IndexRequest(indexName, typeName, id).parent(parent).source(json);
-            bulkProcessor.add(indexRequest);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            commitLock.unlock();
-        }
-    }
-
-    /**
      * 加入删除请求到缓冲池
      *
-     * @param id
+     * @param indexName  索引名称
+     * @param id         ID
      */
-    public static void addDeleteRequestToBulk(String id) {
+    public static void addDeleteRequestToBulk(String indexName, String id) {
         commitLock.lock();
         try {
-            DeleteRequest deleteRequest = new DeleteRequest(ClientConfig.indexPrefix, ClientConfig.typeName, id);
+            DeleteRequest deleteRequest = new DeleteRequest(indexName, ClientConfig.typeName, id);
             bulkProcessor.add(deleteRequest);
         } catch (Exception e) {
             e.printStackTrace();
@@ -166,13 +173,34 @@ public class ElasticSearchClient {
      * @param id        id
      * @param json      更新请求体
      */
-    public static void addUpdateRequestToBulk(String indexName, String typeName, String id, Map<String, Object> json) {
-
+    public static void addUpdateRequestToBulk(String indexName, String id, Map<String, Object> json) {
+        commitLock.lock();
         try {
-            UpdateRequest updateRequest = new UpdateRequest(indexName, typeName, id).doc(json);
+            UpdateRequest updateRequest = new UpdateRequest(indexName, ClientConfig.typeName, id).doc(json).docAsUpsert(true);
             bulkProcessor.add(updateRequest);
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            commitLock.unlock();
+        }
+    }
+
+    /**
+     * 加入更新请求到缓冲池
+     *
+     * @param indexName  索引名
+     * @param id         id
+     * @param jsonString 更新请求体
+     */
+    public static void addUpdateRequestToBulk(String indexName, String id, String jsonString) {
+        commitLock.lock();
+        try {
+            UpdateRequest updateRequest = new UpdateRequest(indexName, ClientConfig.typeName, id).doc(jsonString, XContentType.JSON).docAsUpsert(true);
+            bulkProcessor.add(updateRequest);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            commitLock.unlock();
         }
     }
 
@@ -185,7 +213,15 @@ public class ElasticSearchClient {
         } catch (InterruptedException e) {
             e.printStackTrace();
             logger.error(e.getMessage(), e);
+        } finally {
+            client.close();
         }
-        client.close();
+    }
+
+    /**
+     * 手动刷新批处理器
+     */
+    public static void flush() {
+        bulkProcessor.flush();
     }
 }

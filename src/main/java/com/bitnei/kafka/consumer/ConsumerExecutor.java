@@ -21,7 +21,7 @@ public class ConsumerExecutor {
 
     private static final Logger logger = LogManager.getLogger(ConsumerExecutor.class);
 
-    public static void execute(String topicName,KafkaStreamResolver kafkaStreamResolver){
+    public static void execute(String topicName, KafkaStreamResolver kafkaStreamResolver) {
         try {
             ConsumerConfig consumerConfig = KafkaConsumerConfig.createConfig();
             KafkaConsumer kafkaConsumerManager = new KafkaConsumer(consumerConfig, topicName, 6);
@@ -31,10 +31,10 @@ public class ConsumerExecutor {
                 // 创建一个固定线程池
                 ExecutorService executor = Executors.newFixedThreadPool(kafkaStreams.size());
                 for (final KafkaStream<byte[], byte[]> kafkaStream : kafkaStreams) {
-                    executor.submit(kafkaStreamResolver.getInstance(kafkaStream));
+                    executor.submit(kafkaStreamResolver.init(kafkaStream));
                 }
                 try {
-                    TimeUnit.HOURS.sleep(3);
+                    TimeUnit.MINUTES.sleep(10);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -42,6 +42,7 @@ public class ConsumerExecutor {
                 kafkaConsumerManager.shutdown();
             }
         } catch (Exception e) {
+            e.printStackTrace();
             logger.error(e.getMessage(), e);
         } finally {
             ElasticSearchClient.close();
