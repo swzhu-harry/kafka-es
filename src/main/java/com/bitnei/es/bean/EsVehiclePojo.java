@@ -1,6 +1,8 @@
 package com.bitnei.es.bean;
 
 /**
+ * ES车辆表实体类
+ * <p>
  * Created by IntelliJ IDEA.
  * User: zhaogd
  * Date: 2017/9/5

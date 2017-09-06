@@ -10,7 +10,11 @@ import com.bitnei.kafka.resolver.VehicleResolver;
  */
 public class VehicleSync {
 
+    /**
+     * 同步车辆信息入口
+     *
+     */
     public static void main(String[] args) {
-        ConsumerExecutor.execute("SYNC_DATABASE_ES",new VehicleResolver());
+        ConsumerExecutor.execute("SYNC_DATABASE_ES", new VehicleResolver());
     }
 }

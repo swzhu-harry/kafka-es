@@ -31,6 +31,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * ES客户端
+ */
 public class ElasticSearchClient {
 
     private static final Logger logger = LogManager.getLogger(ElasticSearchClient.class);
@@ -132,9 +135,9 @@ public class ElasticSearchClient {
     /**
      * 加入索引请求到缓冲池
      *
-     * @param indexName  索引名称
-     * @param id         ID
-     * @param json       实体
+     * @param indexName 索引名称
+     * @param id        ID
+     * @param json      实体
      */
     public static void addIndexRequestToBulk(String indexName, String id, Map<String, Object> json) {
         commitLock.lock();
@@ -149,10 +152,29 @@ public class ElasticSearchClient {
     }
 
     /**
-     * 加入删除请求到缓冲池
+     * 加入索引请求到缓冲池
      *
      * @param indexName  索引名称
      * @param id         ID
+     * @param jsonString 索引实体
+     */
+    public static void addIndexRequestToBulk(String indexName, String id, String jsonString) {
+        commitLock.lock();
+        try {
+            IndexRequest indexRequest = new IndexRequest(indexName, ClientConfig.typeName, id).source(jsonString, XContentType.JSON);
+            bulkProcessor.add(indexRequest);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            commitLock.unlock();
+        }
+    }
+
+    /**
+     * 加入删除请求到缓冲池
+     *
+     * @param indexName 索引名称
+     * @param id        ID
      */
     public static void addDeleteRequestToBulk(String indexName, String id) {
         commitLock.lock();
