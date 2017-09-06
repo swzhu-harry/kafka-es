@@ -21,6 +21,7 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.UpdateByQueryAction;
+import org.elasticsearch.index.reindex.UpdateByQueryRequestBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
@@ -93,8 +94,7 @@ public class ElasticSearchClient {
             @Override
             public void afterBulk(long executionId, BulkRequest request, Throwable failure) {
                 // 提交结束且失败时调用
-                logger.error("executionId:" + executionId);
-                logger.error("有文档提交失败！after failure=" + failure);
+                logger.error("有文档提交失败！after failure=", failure);
             }
         })
                 .setBulkActions(BulkProcessorConfig.bulkActions)
@@ -124,12 +124,17 @@ public class ElasticSearchClient {
      * @return 更新结果信息
      */
     public static BulkByScrollResponse updateByQuery(String indexName, QueryBuilder queryBuilder, Script script) {
-        return UpdateByQueryAction
-                .INSTANCE.newRequestBuilder(client)
-                .filter(queryBuilder)
-                .source(indexName)
-                .script(script)
-                .get();
+        UpdateByQueryRequestBuilder updateByQueryRequestBuilder =
+                UpdateByQueryAction.INSTANCE.newRequestBuilder(client)
+                        .filter(queryBuilder)
+                        .source(indexName)
+                        .script(script);
+        if (logger.isDebugEnabled()) {
+            logger.debug("send request json :" + updateByQueryRequestBuilder.source().toString()
+                    + "\n script :" + updateByQueryRequestBuilder.request().toString()
+            );
+        }
+        return updateByQueryRequestBuilder.get();
     }
 
     /**

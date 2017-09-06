@@ -53,12 +53,16 @@ public class VehicleResolver implements KafkaStreamResolver {
             }
             String message = new String(mm.message());
 
+            if (logger.isDebugEnabled()) {
+                logger.debug("接收到消息：" + message);
+            }
+
             String type = message.split(SymbolConstant.COMMA)[0].split(SymbolConstant.COLON)[1];
             String value = message.split(SymbolConstant.COMMA)[1].split(SymbolConstant.COLON)[1];
             String vehicleString = new String(Base64.decodeBase64(value));
 
             if (logger.isDebugEnabled()) {
-                logger.debug("接收到消息：" + vehicleString);
+                logger.debug("解析后消息：" + vehicleString);
             }
 
             // 新增或修改车辆表
