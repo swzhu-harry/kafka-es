@@ -19,6 +19,7 @@ import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.reindex.AbstractBulkByScrollRequest;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.UpdateByQueryAction;
 import org.elasticsearch.index.reindex.UpdateByQueryRequestBuilder;
@@ -127,6 +128,7 @@ public class ElasticSearchClient {
         UpdateByQueryRequestBuilder updateByQueryRequestBuilder =
                 UpdateByQueryAction.INSTANCE.newRequestBuilder(client)
                         .filter(queryBuilder)
+                        .size(AbstractBulkByScrollRequest.SIZE_ALL_MATCHES)
                         .source(indexName)
                         .script(script);
         if (logger.isDebugEnabled()) {

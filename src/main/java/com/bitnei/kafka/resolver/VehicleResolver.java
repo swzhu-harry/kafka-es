@@ -19,6 +19,7 @@ import org.elasticsearch.script.Script;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 车辆表数据解析器
@@ -99,28 +100,32 @@ public class VehicleResolver implements KafkaStreamResolver {
             if (MessageType.UPDATE_BASICS.type.equals(type)) {
 
                 try {
-                    VehicleUpdateBasics updateBasics = JSON.parseObject(vehicleString, VehicleUpdateBasics.class);
+                    List<VehicleUpdateBasics> updateBasicss = JSON.parseArray(vehicleString, VehicleUpdateBasics.class);
 
-                    // 构建查询条件
-                    TermQueryBuilder termQueryBuilder = QueryBuilders.termQuery(updateBasics.getCondition(), updateBasics.getConditionValue());
+                    for (VehicleUpdateBasics updateBasics : updateBasicss) {
+                        // 构建查询条件
+                        TermQueryBuilder termQueryBuilder = QueryBuilders.termQuery(updateBasics.getCondition(), updateBasics.getConditionValue());
 
-                    // 构建修改脚本
-                    StringBuilder scriptString = new StringBuilder();
-                    Map<String, Object> objectMap = updateBasics.getValue();
-                    for (Map.Entry<String, Object> entry : objectMap.entrySet()) {
-                        scriptString.append("ctx._source.");
-                        scriptString.append(entry.getKey());
-                        scriptString.append("=params.");
-                        scriptString.append(entry.getKey());
-                        scriptString.append(";");
-                    }
-                    Script script = new Script(Script.DEFAULT_SCRIPT_TYPE, Script.DEFAULT_SCRIPT_LANG, scriptString.toString(), objectMap);
+                        // 构建修改脚本
+                        StringBuilder scriptString = new StringBuilder();
+                        Map<String, Object> objectMap = updateBasics.getValue();
+                        for (Map.Entry<String, Object> entry : objectMap.entrySet()) {
+                            scriptString.append("ctx._source.");
+                            scriptString.append(entry.getKey());
+                            scriptString.append("=params.");
+                            scriptString.append(entry.getKey());
+                            scriptString.append(";");
+                        }
+                        Script script = new Script(Script.DEFAULT_SCRIPT_TYPE, Script.DEFAULT_SCRIPT_LANG, scriptString.toString(), objectMap);
 
-                    BulkByScrollResponse response = ElasticSearchClient.updateByQuery("vehicle", termQueryBuilder, script);
+                        BulkByScrollResponse response = ElasticSearchClient.updateByQuery("vehicle", termQueryBuilder, script);
 
-                    List<BulkItemResponse.Failure> bulkFailures = response.getBulkFailures();
-                    for (BulkItemResponse.Failure bulkFailure : bulkFailures) {
-                        logger.error("车辆基础信息更新失败：[ id : " + bulkFailure.getId() + ";" + "status : " + bulkFailure.getStatus() + ";" + "message : " + bulkFailure.getMessage() + "]");
+                        List<BulkItemResponse.Failure> bulkFailures = response.getBulkFailures();
+                        for (BulkItemResponse.Failure bulkFailure : bulkFailures) {
+                            logger.error("车辆基础信息更新失败：[ id : " + bulkFailure.getId() + ";" + "status : " + bulkFailure.getStatus() + ";" + "message : " + bulkFailure.getMessage() + "]");
+                        }
+                        // elasticsearch 索引刷新频率为1秒，避免更新版本冲突
+                        TimeUnit.SECONDS.sleep(1);
                     }
                 } catch (Exception e) {
                     logger.error("修改车辆基础信息发生异常,消息体=" + vehicleString, e);
