@@ -66,14 +66,14 @@ public class VehicleResolver implements KafkaStreamResolver {
                 logger.debug("解析后消息：" + vehicleString);
             }
 
-            // 新增或修改车辆表
+            // 修改车辆表不存在就新增
             if (MessageType.ADD_OR_UPDATE.type.equals(type)) {
 
                 try {
                     List<EsVehiclePojo> vehiclePojos = JSON.parseArray(vehicleString, EsVehiclePojo.class);
                     for (EsVehiclePojo vehiclePojo : vehiclePojos) {
                         if (StringUtils.isNotBlank(vehiclePojo.getUuid())) {
-                            ElasticSearchClient.addIndexRequestToBulk("vehicle", vehiclePojo.getUuid(), JSON.toJSONString(vehiclePojo));
+                            ElasticSearchClient.addUpdateRequestToBulk("vehicle", vehiclePojo.getUuid(), JSON.toJSONString(vehiclePojo));
                         }
                     }
                     ElasticSearchClient.flush();
