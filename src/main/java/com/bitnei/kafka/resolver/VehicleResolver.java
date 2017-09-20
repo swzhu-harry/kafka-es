@@ -1,6 +1,7 @@
 package com.bitnei.kafka.resolver;
 
 import com.alibaba.fastjson.JSON;
+import com.bitnei.core.constant.DateFormatEnum;
 import com.bitnei.core.constant.SymbolConstant;
 import com.bitnei.es.bean.EsVehiclePojo;
 import com.bitnei.es.bean.VehicleUpdateBasics;
@@ -73,7 +74,7 @@ public class VehicleResolver implements KafkaStreamResolver {
                     List<EsVehiclePojo> vehiclePojos = JSON.parseArray(vehicleString, EsVehiclePojo.class);
                     for (EsVehiclePojo vehiclePojo : vehiclePojos) {
                         if (StringUtils.isNotBlank(vehiclePojo.getUuid())) {
-                            ElasticSearchClient.addUpdateRequestToBulk("vehicle", vehiclePojo.getUuid(), JSON.toJSONString(vehiclePojo));
+                            ElasticSearchClient.addUpdateRequestToBulk("vehicle", vehiclePojo.getUuid(), JSON.toJSONStringWithDateFormat(vehiclePojo, DateFormatEnum.DATE_TIME.getFormat()));
                         }
                     }
                     ElasticSearchClient.flush();
