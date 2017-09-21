@@ -64,6 +64,12 @@ public class EsVehiclePojo {
 
     private Double officialOperatingMil;//正式运营里程
 
+    /**
+     * vin，车牌号排序专用
+     */
+    private String vinSort;
+    private String licSort;
+
 
     public String getId() {
         return id;
@@ -439,6 +445,22 @@ public class EsVehiclePojo {
 
     public void setOfficialOperatingMil(Double officialOperatingMil) {
         this.officialOperatingMil = officialOperatingMil;
+    }
+
+    public String getVinSort() {
+        return vinSort;
+    }
+
+    public void setVinSort(String vinSort) {
+        this.vinSort = vinSort;
+    }
+
+    public String getLicSort() {
+        return licSort;
+    }
+
+    public void setLicSort(String licSort) {
+        this.licSort = licSort;
     }
 }
 
